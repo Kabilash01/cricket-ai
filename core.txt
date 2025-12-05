@@ -1,0 +1,157 @@
+DETECTION NEED TO DO
+
+Player (person) — bounding box + confidence.
+
+Batsman / Bowler / Wicket-keeper / Fielder (role hints) — either separate classes or inferred from track position/behavior.
+
+Bat — bounding box (useful for bat–ball contact heuristics).
+
+Stumps / Bails — bounding boxes (to detect stump displacement → wicket).
+
+Pitch markers / creases (popping crease, bowling crease) — line detections or small regions.
+
+Boundary line / Boundary rope — polygon or line detection (to detect 4s/6s).
+
+Scoreboard / Score overlay region — region detection + OCR target.
+
+Umpire — bounding box + (separate) detection for umpire gestures (optional class).
+
+Helmet / Jersey number / Team logos — small detectors / OCR for player identification (optional but helpful).
+
+Crowd / Ground features — to help ignore false motion (optional background class).
+
+Replay / On-screen graphic detection — detect if frame is a replay or camera cut to avoid double counting.
+
+#######################################################################################################################################################
+
+Higher-level events & outputs to derive (using those detections)
+
+These are not raw detections but event outputs the system will compute:
+
+Bat–ball contact candidate (use bat + ball later; for now detect bat + swing windows).
+
+Boundary event candidate (ball crossing boundary — later confirmed with ball).
+
+Wicket candidate (stumps displacement + surrounding evidence).
+
+No-ball/front-foot candidate (bowler foot crossing crease detected via pose + crease detection).
+
+Run candidate (batsmen crossing) — track two batsmen crossing creases (requires tracking).
+
+Replay / duplicate suppression — mark events that are replays and avoid double-counting.
+
+Scoreboard readouts (OCR outputs) — extract score/over from detected scoreboard region.
+
+What we will develop next (modules & components) — excluding ball tracking
+
+I list each component, why it’s needed, brief implementation notes, and acceptance criteria.
+
+1. Data & annotation pipeline
+
+Why: Need labeled images for all above detections.
+
+What to implement: CVAT/Roboflow project templates, SAM-assisted mask export, COCO/YOLov8 label export.
+
+Acceptance: 1000 annotated frames covering all core classes; annotation guidelines doc.
+
+2. Object detection models (train & eval)
+
+Players/Bat/Stumps/Umpire/Scoreboard/Boundary/Crease
+
+What: Train YOLOv8 (or ensemble of light detectors) per class set.
+
+Acceptance: mAP@0.5 ≥ target (set per class), consistent detections on validation set.
+
+3. Player identity & role inference
+
+Why: To know who is batting/bowling in commentary.
+
+What: Track IDs → map to roster via OCR jersey numbers or initial manual mapping. Heuristics to infer role from position (bowler at run-up, batsman at crease).
+
+Acceptance: Correctly identify batsman/bowler for >90% of deliveries in validation clips.
+
+4. Multi-object tracking (players & umpires)
+
+What: ByteTrack or StrongSORT integration for players; support mask IoU if using SAM.
+
+Acceptance: IDF1 above threshold; low ID switches on test videos.
+
+5. Pose & action estimation
+
+What: MediaPipe or RTMpose to extract keypoints of batsman/bowler/umpire.
+
+Use: front-foot no-ball detection, bat swing detection, umpire gestures.
+
+Acceptance: Keypoint confidence > threshold on cropped players; correct no-ball candidate detection across test clips.
+
+6. Homography & field mapping
+
+What: Homography tool + UI to select ground control points; map pixel → field coordinates.
+
+Use: detect crease crossing, boundary crossing zones, shot direction.
+
+Acceptance: Known pitch coordinates map accurately within error margin on validation frames.
+
+7. OCR for scoreboard & jersey numbers
+
+What: Tesseract/CRNN for scoreboard; small OCR or digit recognition for jersey numbers.
+
+Use: Get score, overs, and player identity.
+
+Acceptance: Score read accuracy > 95% for clear scoreboard images.
+
+8. Event detection engine (rule-based + ML heuristics)
+
+What: Implement bat-contact candidates, boundary candidates, wicket candidates, run inference, no-ball/wide suggestions.
+
+Use: Provides structured event JSON for LLM.
+
+Acceptance: Per-event precision/recall targets (e.g., boundary detection precision >90%).
+
+9. Replay / graphic detection & suppression
+
+What: Classify frames with replays/graphics; suppress events during them.
+
+Acceptance: Detect replays with >98% accuracy.
+
+10. LLM commentary pipeline (template + LLM)
+
+What: Template engine (fallback), prompt design & LLM integration for play-by-play. Personalization hooks.
+
+Acceptance: Factual consistency checks pass; LLM outputs match structured events in >98% cases.
+
+11. Personalization & multilingual adapters
+
+What: LoRA adapters or prompt engineering to change tone/verbosity/language.
+
+Acceptance: User can select style and get consistent alternate phrasing.
+
+12. UI & overlay system (visualization + operator panel)
+
+What: Live overlay for bounding boxes, scoreboard, commentary feed; operator panel for manual confirm/correct events.
+
+Acceptance: Operator can confirm/reject events with <3 clicks; overlays synchronized to frames.
+
+13. Verifier worker (heavy background checks)
+
+What: Worker that runs Deformable DETR / TrackNet on flagged low-confidence events and returns corrections.
+
+Acceptance: Verifier corrects ≥X% of flagged errors in validation set.
+
+14. API, storage & logging
+
+What: REST API endpoints, event DB (Postgres), raw evidence storage, telemetry logs.
+
+Acceptance: All events persisted; API returns latest scoreboard & events.
+
+15. Monitoring, metrics & active learning loop
+
+What: Dashboards for latency, detection metrics, operator corrections; queue for low-confidence frames to annotate.
+
+Acceptance: Active-learning queue feeds retraining; metrics updated weekly.
+
+16. Deployment & optimization
+
+What: ONNX/TensorRT conversion, Docker images, multi-process pipeline for low latency.
+
+Acceptance: p50/p95 latency within real-time targets.

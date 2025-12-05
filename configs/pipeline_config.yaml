@@ -1,0 +1,5 @@
+# Pipeline Configuration
+pipeline:
+  fps: 30
+  realtime: true
+  verification: true

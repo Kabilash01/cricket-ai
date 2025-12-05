@@ -1,0 +1,6 @@
+# YOLOv8 Players Configuration
+model: yolov8n.pt
+data: data/yolov8/players.yaml
+epochs: 100
+imgsz: 640
+batch: 16

@@ -1,0 +1,4 @@
+# TTS Configuration
+model:
+  name: FastSpeech2
+  vocoder: HifiGAN

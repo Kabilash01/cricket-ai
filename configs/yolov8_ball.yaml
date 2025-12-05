@@ -1,0 +1,6 @@
+# YOLOv8 Ball Configuration
+model: yolov8n.pt
+data: data/yolov8/ball.yaml
+epochs: 100
+imgsz: 640
+batch: 16

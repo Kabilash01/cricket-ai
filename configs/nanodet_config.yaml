@@ -1,0 +1,4 @@
+# NanoDet Configuration
+model:
+  name: nanodet
+  backbone: shufflenetv2

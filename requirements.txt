@@ -1,0 +1,55 @@
+# Core dependencies
+opencv-python
+numpy
+pandas
+scipy
+
+# Deep Learning
+#torch
+#torchvision
+ultralytics
+
+# Detection & Tracking
+#nanodet
+#bytetrack
+ensemble-boxes
+filterpy
+
+# Pose Estimation
+mediapipe
+
+# OCR
+pytesseract
+easyocr
+
+# Computer Vision
+scikit-image
+albumentations
+
+# LLM & NLP
+transformers
+#torch-audiomentations
+peft
+
+# TTS
+TTS
+
+# API & Server
+fastapi
+uvicorn
+pydantic
+
+# Utilities
+pyyaml
+tqdm
+loguru
+python-dotenv
+
+# Testing
+pytest
+pytest-cov
+
+# Visualization
+matplotlib
+seaborn
+plotly
