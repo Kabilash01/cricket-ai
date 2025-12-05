@@ -39,6 +39,9 @@ env/
 # Data
 data/raw/*
 data/processed/*
+data/samples/*.mp4
+data/samples/*.avi
+data/samples/*.mov
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 
